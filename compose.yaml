@@ -18,6 +18,12 @@ services:
       MYSQL_RANDOM_ROOT_PASSWORD: osla
     volumes:
       - db:/var/lib/mysql
+
+networks:
+  default:
+    external:
+      name: tooling_app_network
+
 volumes:
   tooling_frontend:
   db:
