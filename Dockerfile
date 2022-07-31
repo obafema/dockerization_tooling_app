@@ -12,4 +12,9 @@ RUN a2enmod rewrite
 COPY html /var/www
 RUN chown -R www-data:www-data /var/www
 
+ENV MYSQL_IP=mysqlserverhost
+ENV MYSQL_USER=userconnect
+ENV MYSQL_PASS=zigali
+ENV MYSQL_DBNAME=toolingdb
+
 CMD ["start-apache"]
