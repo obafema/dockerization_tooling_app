@@ -10,14 +10,14 @@ $dotenv->load();
 // enabling environment variable for php
 
 
-$servername = $_ENV["MYSQL_IP"]; // input servername
-$username = $_ENV["MYSQL_USER"]; // input username
-$password = $_ENV["MYSQL_PASS"]; //input password
-$dbname = $_ENV["MYSQL_DBNAME"]; // input dbname
+$servername = "localhost"; // input servername
+$username = "userconnect"; // input username
+$password = "zigali"; //input password
+$dbname = "toolingdb"; // input dbname
 
 
 // Create connection
-$conn = new mysqli(mysqlserverhost, userconnect, zigali, toolingdb);
+$conn = new mysqli($servername, $username, $password, $dbname);
 
 // Check connection
 if ($conn->connect_error) {
