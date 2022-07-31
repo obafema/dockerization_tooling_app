@@ -10,7 +10,7 @@ $dotenv->load();
 // enabling environment variable for php
 
 
-$servername = "127.0.0.1"; // input servername
+$servername = "mysqlserverhost"; // input servername
 $username = "userconnect"; // input username
 $password = "zigali"; //input password
 $dbname = "toolingdb"; // input dbname
