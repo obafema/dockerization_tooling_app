@@ -1,82 +1,79 @@
-pipeline {
-  agent any
-  stages {
-
-       stage('Building the software') {
-         steps {
-             echo 'Building the software'
-                    sh '''
-                    echo "Building the software"
-                    '''
-         }
-       }
-
-
-       stage('Unit Testing') {
-         steps {
-                    sh '''
-                    echo "Testing the software (Unit Testing)"
-                    '''
-
-                    sh '''
-                    echo "Step2"
-                    '''
-         }
-       }
-
-       stage('Quality Gate') {
-         steps {
-                    sh '''
-                    echo "Implementing Quality Gate Checks"
-                    '''
-         }
-       }
-
-
-       stage('Deploy to Dev environment') {
-        when { branch pattern: "^feature.*|^bug.*|^dev", comparator: "REGEXP"}
-         steps {
-                    sh '''
-                    echo "Deploying the software to Non-Production Environment only from Feature Branch"
-                    '''
-         }
-       }
-
-       stage('Deploy to Integration environment') {
-                       when {
-                expression { BRANCH_NAME ==~ /(integration|develop|master)/ }
-            }
-         steps {
-                    sh '''
-                    echo "Deploying the software to Integration Environment from Develop branch for further integration tests"
-                    '''
-         }
-       }
-
-
-       stage('Deploy to pre-production') {
-        when { buildingTag() }
-         steps {
-                    sh '''
-                    echo "Deploying the software to Production Environment from Master branch or a Git Tag"
-                    '''
-         }
-       }
-
-       stage('Deploy to Production') {
-        when { buildingTag() }
-         steps {
-
-            script {
-              timeout(time: 10, unit: 'MINUTES') {
-                input(id: "Deploy Gate", message: "Deploy to production?", ok: 'Deploy')
-              }
-        }
-                    sh '''
-                    echo "Deploying the software to Production Environment from Master branch or a Git Tag"
-                    '''
-         }
-       }
-
+ pipeline {
+ 
+    environment {
+        registry = "obafema/tooling" 
+        registryCredential = 'dockerhub-login' 
+        dockerImage = ''
     }
+
+    agent any
+
+    stages {
+
+        stage ('initial cleanup') {
+          steps {
+                dir("${WORKSPACE}") {
+               deleteDir()
+              }
+            }
+        }
+
+        stage('Checkout SCM') {
+          steps {
+            git branch: 'feature', url: 'https://github.com/obafema/dockerization_tooling_app.git', credentialsId: 'github-login'
+          }
+       }
+
+      // stage('remove existing image if there is any'){
+      //   steps{
+      //      sh 'docker rmi registry'
+      //   }    
+      // }
+// write a command to ignore if the image does not exits, the stage should igonre the error and continue
+
+       stage('Build Docker Image') {
+         steps {
+           script {
+              dockerImage = docker.build registry
+                  }
+           } 
+       }
+
+        // stage('Run the container'){
+        //   steps{
+        //     sh 'docker run registry'
+        //   }
+        // }
+
+        // stage('Test the Image before pusging to registry')
+        //   steps{
+        //     sh './imagetest'
+        //   }
+
+        stage('Tag the image'){
+           steps {
+              sh 'docker image tag ${registry}:latest ${registry}:feature-0.0.1'
+          }
+        }
+         
+        stage('Deploy docker image to docker hub') {
+          steps {
+            script {
+            docker.withRegistry( '', registryCredential ) {
+            dockerImage.push()
+               }
+            }
+
+           }
+        }
+
+        stage('Remove unsused images'){
+           steps{
+            sh "docker rmi $registry:latest"
+            sh "docker rmi ${registry}:feature-0.0.1"
+          }
+        }
+
+      }
+
 }
